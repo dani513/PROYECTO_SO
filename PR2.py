@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import time
+import csv
 
 class ReproductorMusica:  #Clase Reproductor de musica 
     def __init__(self): #constructor 
@@ -22,6 +23,7 @@ class ReproductorMusica:  #Clase Reproductor de musica
 ##############################################################################
     def guardar_playlist(self): #guarda la lista de reproduccion actual en el csv 
         self.playlist.to_csv(self.nombre_archivo, index=False)
+        print("Agregada exitosamente a la playlist")
 
 
 ##############################################################################
@@ -31,27 +33,23 @@ class ReproductorMusica:  #Clase Reproductor de musica
 
 ##############################################################################
     def crear_bloqueo(self): #crea archivo bandera
-        with open(self.bloqueo, "w") as f:
-            pass
-
+        with open(self.bloqueo, mode='w', newline='') as archivo_bloqueo:
+            escritor = csv.writer(archivo_bloqueo)
+            escritor.writerow(["En proceso"])
 
 ##############################################################################
     def eliminar_bloqueo(self): #elimina el archivo bandera
         os.remove(self.bloqueo)
 
-
 ##############################################################################
     def agregar_cancion(self, titulo, interprete, album, fecha, usuario, duracion):
         self.cargar_playlist()  #carga la playlist actual desde el archivo csv
-        if self.verificar_bloqueo(): #verifica el archivo bandera
-            print("actualizacion de lista en curso, espere un momento.")
-            while self.verificar_bloqueo():
-                time.sleep(1)
-        
-        self.crear_bloqueo()  #Crear archivo de bloqueo
+        time.sleep(2)  
+
         # Verificar si la canción ya está en la lista
         if not self.playlist[(self.playlist['Titulo'] == titulo) & (self.playlist['Interprete'] == interprete)].empty:
             print(f"La canción '{titulo}' de '{interprete}' ya está en la playlist.")
+            time.sleep(3)  
             self.eliminar_bloqueo()  # elimina archivo de bloqueo
             return
         
@@ -60,7 +58,9 @@ class ReproductorMusica:  #Clase Reproductor de musica
                                                "Fecha", "Usuario", "Duración"])
         self.playlist = pd.concat([self.playlist, nueva_cancion], ignore_index=True)
         self.guardar_playlist()  #guarda la playlist actualizada en el archivo
+        time.sleep(6)  # ESTO FUE LO QUE AGREGUE
         self.eliminar_bloqueo()  
+        print("borra bloqueo")
 
 
 ##############################################################################
@@ -75,25 +75,36 @@ class ReproductorMusica:  #Clase Reproductor de musica
 
 
 ##############################################################################
+bloqueo = "bloqueo.txt"
 
 if __name__ == "__main__":
     reproductor = ReproductorMusica()
-
+    
     while True:
-        print("\nMenú:")
-        print("1. Agregar canción")
-        print("2. Mostrar lista de reproducción")
-        print("3. Salir")
         
-        opcion = input("Seleccione una opción: ")
+        os.system('clear')
+        print("\nMenu:")
+        print("[1]--> Agregar cancion")
+        print("[2]--> Mostrar lista de reproduccion")
+        print("[3]--> Salir")
+        
+        opcion = input("Seleccione una opcion: ")
         
         if opcion == "1":
-            titulo = input("Título de la canción: ")
-            interprete = input("Intérprete: ")
-            album = input("Álbum: ")
-            fecha = input("Fecha de agregación: ")
-            usuario = input("Usuario que agregó: ")
-            duracion = input("Duración: ")
+            
+            if reproductor.verificar_bloqueo(): #verifica el archivo bandera
+                print("actualizacion de lista en curso, espere un momento.")
+                while reproductor.verificar_bloqueo():
+                    print("(verifica)")
+                    time.sleep(2)  
+                    
+            reproductor.crear_bloqueo()
+            titulo = input("Título de la cancion: ")
+            interprete = input("Interprete: ")
+            album = input("Album: ")
+            fecha = input("Fecha de agregacion: ")
+            usuario = input("Usuario que agrego: ")
+            duracion = input("Duracion: ")
             
             reproductor.agregar_cancion(titulo, interprete, album, fecha, usuario, duracion)
         
